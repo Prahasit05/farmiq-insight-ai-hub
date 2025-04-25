@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Upload, ChartBar, Soil, User } from 'lucide-react';
+import { Home, Upload, ChartBar, Leaf, User } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -76,7 +76,7 @@ const Footer = () => {
             <span className="text-xs mt-1">Prices</span>
           </a>
           <a href="#soil-tips" className="flex flex-col items-center py-2">
-            <Soil className="h-6 w-6 text-farmiq-green" />
+            <Leaf className="h-6 w-6 text-farmiq-green" />
             <span className="text-xs mt-1">Soil</span>
           </a>
           <a href="#" className="flex flex-col items-center py-2">

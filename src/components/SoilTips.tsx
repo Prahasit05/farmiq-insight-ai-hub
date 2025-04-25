@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Soil, ArrowRight, Leaf } from 'lucide-react';
+import { Leaf, ArrowRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const soilTypes = [
@@ -117,7 +116,7 @@ const SoilTips = () => {
                 <Card className="card-shadow border-farmiq-green-light">
                   <CardHeader className="bg-farmiq-green-light bg-opacity-10">
                     <div className="flex items-center gap-3">
-                      <Soil className="h-6 w-6 text-farmiq-green" />
+                      <Leaf className="h-6 w-6 text-farmiq-green" />
                       <div>
                         <CardTitle>{selectedSoil.name}</CardTitle>
                         <CardDescription>{selectedSoil.description}</CardDescription>
