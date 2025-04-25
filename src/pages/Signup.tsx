@@ -27,7 +27,15 @@ const Signup = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <img src="/farmiq-logo.png" alt="FarmIQ Logo" className="h-12 w-12 mr-2" />
+            <img 
+              src="/farmiq-logo.png" 
+              alt="FarmIQ Logo" 
+              className="h-12 w-12 mr-2 object-contain"
+              onError={(e) => {
+                console.error("Logo image failed to load");
+                e.currentTarget.src = "/placeholder.svg";
+              }} 
+            />
             <span className="text-2xl font-bold text-farmiq-green">FarmIQ</span>
           </div>
           <CardTitle className="text-2xl text-center font-bold">Create an account</CardTitle>

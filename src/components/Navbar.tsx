@@ -12,7 +12,15 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <div className="flex items-center gap-2">
-            <img src="/farmiq-logo.png" alt="FarmIQ Logo" className="w-10 h-10" />
+            <img 
+              src="/farmiq-logo.png" 
+              alt="FarmIQ Logo" 
+              className="w-10 h-10 object-contain" 
+              onError={(e) => {
+                console.error("Logo image failed to load");
+                e.currentTarget.src = "/placeholder.svg";
+              }}
+            />
             <span className="font-bold text-xl text-farmiq-green hidden sm:block">FarmIQ</span>
           </div>
         </div>
