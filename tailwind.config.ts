@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        farmiq: {
+          green: {
+            DEFAULT: '#2A623D',
+            light: '#3E885B',
+            lighter: '#68B984'
+          },
+          brown: {
+            DEFAULT: '#8A6D3B',
+            light: '#A58B65'
+          },
+          cream: '#F9F5E7',
+          gold: '#E6C87A'
+        }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +98,22 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        'fade-in': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(10px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out forwards'
 			}
 		}
 	},
