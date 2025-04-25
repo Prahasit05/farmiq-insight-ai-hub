@@ -12,9 +12,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-farmiq-green rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">F</span>
-            </div>
+            <img src="/farmiq-logo.png" alt="FarmIQ Logo" className="w-10 h-10" />
             <span className="font-bold text-xl text-farmiq-green hidden sm:block">FarmIQ</span>
           </div>
         </div>
@@ -28,7 +26,7 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Select defaultValue="en">
+          <Select defaultValue="en" onValueChange={(value) => console.log('Language changed to:', value)}>
             <SelectTrigger className="w-[80px]">
               <SelectValue placeholder="Language" />
             </SelectTrigger>
@@ -41,7 +39,14 @@ const Navbar = () => {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" className="hidden md:flex">Login</Button>
+          <div className="hidden md:flex gap-2">
+            <Button variant="outline" asChild>
+              <a href="/login">Login</a>
+            </Button>
+            <Button className="bg-farmiq-green hover:bg-farmiq-green-light" asChild>
+              <a href="/signup">Sign Up</a>
+            </Button>
+          </div>
           
           {/* Mobile menu button */}
           <button 
@@ -61,7 +66,12 @@ const Navbar = () => {
             <a href="#disease-detection" className="text-farmiq-green hover:text-farmiq-green-light font-medium py-2 border-b border-gray-100">Disease Detection</a>
             <a href="#marketplace" className="text-farmiq-green hover:text-farmiq-green-light font-medium py-2 border-b border-gray-100">Marketplace</a>
             <a href="#soil-tips" className="text-farmiq-green hover:text-farmiq-green-light font-medium py-2 border-b border-gray-100">Soil Tips</a>
-            <Button className="mt-2">Login</Button>
+            <Button asChild>
+              <a href="/login">Login</a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/signup">Sign Up</a>
+            </Button>
           </nav>
         </div>
       )}
