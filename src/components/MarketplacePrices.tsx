@@ -1,11 +1,29 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUp, ArrowDown, ChartBar } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChartBar, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
-const marketData = {
+interface MarketItem {
+  name: string;
+  price: number;
+  change: number;
+  unit: string;
+}
+
+interface MarketData {
+  vegetables: MarketItem[];
+  fruits: MarketItem[];
+  grains: MarketItem[];
+  lastUpdated: string;
+}
+
+// Initial market data
+const initialMarketData: MarketData = {
   vegetables: [
     { name: 'Tomato', price: 25, change: 3.5, unit: '₹/kg' },
     { name: 'Potato', price: 18, change: -1.2, unit: '₹/kg' },
@@ -29,14 +47,103 @@ const marketData = {
     { name: 'Sorghum', price: 32, change: 0.3, unit: '₹/kg' },
     { name: 'Barley', price: 38, change: -1.1, unit: '₹/kg' },
     { name: 'Millet', price: 42, change: 2.7, unit: '₹/kg' },
-  ]
+  ],
+  lastUpdated: new Date().toLocaleString()
+};
+
+// Function to simulate fetching updated data from an API
+// In a real app, this would be an API call to a real market data source
+const fetchMarketData = async (region: string, district: string, state: string): Promise<MarketData> => {
+  // In a real app, we would use these parameters to fetch specific regional data
+  console.log(`Fetching market data for ${region} in ${district}, ${state}`);
+  
+  try {
+    // Simulate an API call with a small delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate slightly randomized data based on the initial data
+    const generateRandomizedData = (items: MarketItem[]): MarketItem[] => {
+      return items.map(item => {
+        const priceChange = (Math.random() * 10) - 5; // Random price change between -5 and +5
+        const newPrice = Math.max(5, Math.round(item.price + priceChange));
+        const newChange = +(Math.random() * 6 - 3).toFixed(1); // Random change between -3% and +3%
+        
+        return {
+          ...item,
+          price: newPrice,
+          change: newChange
+        };
+      });
+    };
+    
+    // Return "fresh" data
+    return {
+      vegetables: generateRandomizedData(initialMarketData.vegetables),
+      fruits: generateRandomizedData(initialMarketData.fruits),
+      grains: generateRandomizedData(initialMarketData.grains),
+      lastUpdated: new Date().toLocaleString()
+    };
+  } catch (error) {
+    console.error("Failed to fetch market data:", error);
+    // Return the initial data if the fetch fails
+    return { ...initialMarketData, lastUpdated: new Date().toLocaleString() };
+  }
 };
 
 const MarketplacePrices = () => {
+  const { toast } = useToast();
   const [region, setRegion] = useState('district');
   const [district, setDistrict] = useState('pune');
   const [state, setState] = useState('maharashtra');
   const [duration, setDuration] = useState('daily');
+  const [marketData, setMarketData] = useState<MarketData>(initialMarketData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('vegetables');
+  
+  // Calculate average price change
+  const calculateAverageChange = () => {
+    const allItems = [
+      ...marketData.vegetables,
+      ...marketData.fruits,
+      ...marketData.grains
+    ];
+    
+    const totalChange = allItems.reduce((sum, item) => sum + item.change, 0);
+    return +(totalChange / allItems.length).toFixed(1);
+  };
+  
+  // Calculate trading volume (random for demo)
+  const calculateTradingVolume = () => {
+    return (Math.random() * 30 + 15).toFixed(1);
+  };
+  
+  const refreshData = async () => {
+    setIsLoading(true);
+    try {
+      const freshData = await fetchMarketData(region, district, state);
+      setMarketData(freshData);
+      toast({
+        title: "Data Updated",
+        description: "Latest market prices have been fetched.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not fetch latest market data. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Initial data fetch
+  useEffect(() => {
+    refreshData();
+  }, [region, district, state]);
   
   return (
     <section id="marketplace" className="py-16">
@@ -114,24 +221,45 @@ const MarketplacePrices = () => {
           <div className="flex items-end">
             <Card className="w-full bg-farmiq-cream">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Market Overview</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Market Overview</CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-1 h-7 w-7"
+                    onClick={refreshData}
+                    disabled={isLoading}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    <span className="sr-only">Refresh</span>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Average Price Change</p>
                     <div className="flex items-center">
-                      <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                      <span className="font-medium">1.2%</span>
+                      {calculateAverageChange() > 0 ? (
+                        <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
+                      ) : calculateAverageChange() < 0 ? (
+                        <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
+                      ) : null}
+                      <span className={`font-medium ${
+                        calculateAverageChange() > 0 ? 'text-green-600' : 
+                        calculateAverageChange() < 0 ? 'text-red-600' : ''
+                      }`}>
+                        {Math.abs(calculateAverageChange())}%
+                      </span>
                     </div>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Trading Volume</p>
-                    <p className="font-medium">24.5 Tons</p>
+                    <p className="font-medium">{calculateTradingVolume()} Tons</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Last Updated</p>
-                    <p className="font-medium">Today, 10:30 AM</p>
+                    <p className="font-medium">{marketData.lastUpdated}</p>
                   </div>
                 </div>
               </CardContent>
@@ -139,7 +267,7 @@ const MarketplacePrices = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="vegetables">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="vegetables">Vegetables</TabsTrigger>
             <TabsTrigger value="fruits">Fruits</TabsTrigger>

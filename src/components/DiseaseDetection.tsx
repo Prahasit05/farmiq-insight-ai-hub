@@ -1,14 +1,116 @@
 
-import React, { useState } from 'react';
-import { Upload, Check, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, Check, AlertCircle, Upload as UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 type DetectionStatus = 'idle' | 'uploading' | 'processing' | 'complete';
 
+interface DetectionResult {
+  crop: {
+    name: string;
+    scientificName: string;
+  };
+  disease: {
+    name: string;
+    scientificName: string;
+    severity: 'Low' | 'Moderate' | 'High' | 'Severe';
+    description: string;
+  };
+  solutions: string[];
+}
+
+// Sample disease detection database - in a real app this would come from an AI model
+const diseaseDatabase: Record<string, DetectionResult> = {
+  'tomato': {
+    crop: { name: 'Tomato', scientificName: 'Solanum lycopersicum' },
+    disease: { 
+      name: 'Early Blight', 
+      scientificName: 'Alternaria solani', 
+      severity: 'Moderate',
+      description: 'Fungal disease that causes dark spots with concentric rings on leaves, stems, and fruits.'
+    },
+    solutions: [
+      'Remove and destroy infected plant parts',
+      'Apply fungicide containing chlorothalonil or copper',
+      'Rotate crops - avoid planting tomatoes in the same location for 3-4 years',
+      'Ensure proper spacing between plants for good air circulation',
+      'Water at the base of plants to keep foliage dry'
+    ]
+  },
+  'potato': {
+    crop: { name: 'Potato', scientificName: 'Solanum tuberosum' },
+    disease: { 
+      name: 'Late Blight', 
+      scientificName: 'Phytophthora infestans', 
+      severity: 'Severe',
+      description: 'Water mold that causes dark lesions on leaves and stems, white fuzzy growth on undersides, and can lead to tuber rot.'
+    },
+    solutions: [
+      'Apply fungicide containing mancozeb or chlorothalonil preventatively',
+      'Use certified disease-free seed potatoes',
+      'Plant resistant varieties when available',
+      'Destroy all infected plant material - do not compost',
+      'Improve drainage in the field and avoid overhead irrigation'
+    ]
+  },
+  'rice': {
+    crop: { name: 'Rice', scientificName: 'Oryza sativa' },
+    disease: { 
+      name: 'Rice Blast', 
+      scientificName: 'Magnaporthe oryzae', 
+      severity: 'High',
+      description: 'Fungal disease causing diamond-shaped lesions on leaves and can affect all above-ground parts of the plant.'
+    },
+    solutions: [
+      'Apply fungicide containing Tricyclazole at 0.6g/L of water',
+      'Ensure proper drainage in the field',
+      'Reduce nitrogen application',
+      'Maintain field sanitation by removing affected plants',
+      'Consider resistant varieties for next planting season'
+    ]
+  },
+  'wheat': {
+    crop: { name: 'Wheat', scientificName: 'Triticum aestivum' },
+    disease: { 
+      name: 'Rust', 
+      scientificName: 'Puccinia spp.', 
+      severity: 'Moderate',
+      description: 'Fungal disease that forms rusty, orange-brown pustules on leaves and stems.'
+    },
+    solutions: [
+      'Apply fungicide containing tebuconazole or propiconazole',
+      'Plant resistant varieties',
+      'Plant early to avoid peak rust season',
+      'Monitor fields regularly for early detection',
+      'Destroy volunteer wheat plants that can harbor the pathogen'
+    ]
+  },
+  'cotton': {
+    crop: { name: 'Cotton', scientificName: 'Gossypium hirsutum' },
+    disease: { 
+      name: 'Cotton Leaf Curl Virus', 
+      scientificName: 'Begomovirus', 
+      severity: 'Severe',
+      description: 'Viral disease transmitted by whiteflies causing upward curling, thickening and darkening of leaves.'
+    },
+    solutions: [
+      'Control whitefly vectors using appropriate insecticides',
+      'Remove and destroy infected plants',
+      'Plant resistant varieties when available',
+      'Practice crop rotation with non-host crops',
+      'Maintain field hygiene by removing weeds that host the virus'
+    ]
+  }
+};
+
 const DiseaseDetection = () => {
+  const { toast } = useToast();
   const [status, setStatus] = useState<DetectionStatus>('idle');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [detectionResult, setDetectionResult] = useState<DetectionResult | null>(null);
+  const [imageHash, setImageHash] = useState<string>('');
   
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -19,11 +121,28 @@ const DiseaseDetection = () => {
         setSelectedImage(event.target?.result as string);
         setStatus('uploading');
         
+        // Generate a pseudo-hash of the image to determine which result to show
+        // In a real app, this would be an actual image analysis
+        const imageData = event.target?.result as string;
+        const simpleHash = Math.abs(imageData.split('').reduce((acc, char) => {
+          return acc + char.charCodeAt(0);
+        }, 0) % 5);
+        
+        const cropTypes = ['tomato', 'potato', 'rice', 'wheat', 'cotton'];
+        setImageHash(cropTypes[simpleHash]);
+        
         // Simulate upload and processing
         setTimeout(() => {
           setStatus('processing');
           setTimeout(() => {
+            // Set detection result based on pseudo-hash
+            setDetectionResult(diseaseDatabase[cropTypes[simpleHash]]);
             setStatus('complete');
+            toast({
+              title: "Analysis Complete",
+              description: "Disease detection results are ready.",
+              duration: 3000,
+            });
           }, 2000);
         }, 1500);
       };
@@ -35,6 +154,7 @@ const DiseaseDetection = () => {
   const resetUpload = () => {
     setStatus('idle');
     setSelectedImage(null);
+    setDetectionResult(null);
   };
 
   return (
@@ -81,7 +201,7 @@ const DiseaseDetection = () => {
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-gray-300 rounded-md p-12 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
                     <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
                     <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                   </div>
@@ -121,7 +241,7 @@ const DiseaseDetection = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {status === 'complete' ? (
+                {status === 'complete' && detectionResult ? (
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="bg-green-100 p-2 rounded-full">
@@ -129,7 +249,7 @@ const DiseaseDetection = () => {
                       </div>
                       <div>
                         <h4 className="font-medium">Crop Identified</h4>
-                        <p className="text-muted-foreground">Rice (Oryza sativa)</p>
+                        <p className="text-muted-foreground">{detectionResult.crop.name} ({detectionResult.crop.scientificName})</p>
                       </div>
                     </div>
                     
@@ -139,19 +259,18 @@ const DiseaseDetection = () => {
                       </div>
                       <div>
                         <h4 className="font-medium">Disease Detected</h4>
-                        <p className="text-muted-foreground">Rice Blast (Magnaporthe oryzae)</p>
-                        <p className="text-sm text-amber-600 font-medium mt-1">Moderate Severity</p>
+                        <p className="text-muted-foreground">{detectionResult.disease.name} ({detectionResult.disease.scientificName})</p>
+                        <p className="text-sm text-amber-600 font-medium mt-1">{detectionResult.disease.severity} Severity</p>
+                        <p className="text-sm mt-2">{detectionResult.disease.description}</p>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-medium mb-2">Recommended Solution:</h4>
                       <ol className="list-decimal list-inside space-y-2 text-sm">
-                        <li>Apply fungicide containing Tricyclazole at 0.6g/L of water</li>
-                        <li>Ensure proper drainage in the field</li>
-                        <li>Reduce nitrogen application</li>
-                        <li>Maintain field sanitation by removing affected plants</li>
-                        <li>Consider resistant varieties for next planting season</li>
+                        {detectionResult.solutions.map((solution, index) => (
+                          <li key={index}>{solution}</li>
+                        ))}
                       </ol>
                     </div>
                   </div>
